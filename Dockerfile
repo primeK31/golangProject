@@ -1,23 +1,32 @@
 # Use Go 1.23 bookworm as base image
 FROM golang:1.23-bookworm AS base
 
-# Move to working directory /build
-WORKDIR /cmd/app/
+# Set working directory inside the container
+WORKDIR /golangProject
 
-# Copy the go.mod and go.sum files to the /build directory 
+# Copy go.mod and go.sum to the /app directory
 COPY go.mod go.sum ./
 
 # Install dependencies
 RUN go mod download
 
 # Copy the entire source code into the container
-COPY . .
+COPY . /golangProject/
+
+# List files in /app for debugging
+RUN ls -al /golangProject
+
+# Change to the directory where the main.go file is located
+WORKDIR /golangProject/cmd/app
+
+# List files in /app/cmd/app for debugging
+RUN ls -al /golangProject/cmd/app
 
 # Build the application
-RUN go build -o main
+RUN go build -o /main
 
-# Document the port that may need to be published
+# Expose the port
 EXPOSE 8080
 
-# Start the application
-CMD ["/cmd/app/main"]
+# Command to run the application
+CMD ["/main"]
