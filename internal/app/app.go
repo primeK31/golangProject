@@ -18,24 +18,23 @@ type App struct {
 }
 
 func New() *App {
-	// Загрузка конфигурации с обработкой ошибок
+	// config load
 	cfg := config.LoadConfig()
 
-	// Инициализация подключения к БД
-	db, err := connections.ConnectDB(cfg.SQL_DATABASE_URL)
+	// db connect init
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", cfg.DB_USER, cfg.DB_PASS, cfg.DB_HOST, cfg.DB_PORT, cfg.DB_NAME)
+	db, err := connections.ConnectDB(dsn)
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
-	
-	// Убрали defer db.Close() - соединение должно жить пока работает приложение
 
 	fmt.Println("Database connected successfully!")
 
-	// Инициализация репозиториев
+	// repo init
 	userRepo := repositories.NewUserRepository(db)
 
-	// Инициализация сервисов
-	authService := auth.New(cfg.JWTSecret) // Исправили на JWTSecret
+	// service init
+	authService := auth.New(cfg.JWTSecret)
 	userService := user.New(userRepo)
     
     return &App{

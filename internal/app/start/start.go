@@ -7,7 +7,7 @@ import (
 	"golangproject/internal/deliveries/http_delivery"
 	"golangproject/internal/services/auth"
 	"golangproject/internal/services/user"
-	_ "golangproject/cmd/app/docs"
+	_ "golangproject/docs/swagger"
 
 	"github.com/gorilla/mux"
 	"github.com/swaggo/http-swagger"
@@ -35,8 +35,23 @@ func NewServer(authService *auth.Service, userService *user.Service) *Server {
 	}
 }
 
+// @title Clean Architecture API
+// @version 1.0
+// @description This is a sample server for Clean Architecture.
+// @termsOfService http://swagger.io/terms/
 
-// setupRouter внутренняя функция для настройки маршрутизатора
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func setupRouter(authService *auth.Service, userService *user.Service) *mux.Router {
     router := mux.NewRouter()
     

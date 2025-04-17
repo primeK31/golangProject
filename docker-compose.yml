@@ -1,0 +1,51 @@
+version: '3.9'  # needed for depends_on condition
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: my-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: my-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_USER: myuser
+      DB_PASS: mypassword
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: mydatabase
+      SECRET_KEY: ec362341b75a7b4d65b17b17cf85a8a38ce363032c001802fefcc3a796f58822
+      HTTPPort: ":8080"
+    networks:
+      - backend-network
+
+volumes:
+  mysql_data:
+
+networks:
+  backend-network:
+    driver: bridge

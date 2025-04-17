@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	_ "golangproject/cmd/app/docs"
+	_ "golangproject/docs/swagger"
 	"golangproject/internal/repositories"
 	"golangproject/internal/services/auth"
 	"golangproject/internal/services/user"
@@ -45,7 +45,7 @@ func RegisterHandler(userService *user.Service) http.HandlerFunc {
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Param credentials body AuthRequest true "Login credentials"
+// @Param credentials body reqresp.AuthRequest true "Login credentials"
 // @Success 200 {object} reqresp.AuthResponse
 // @Failure 400 {object} reqresp.ErrorResponse
 // @Failure 401 {object} reqresp.ErrorResponse
@@ -89,15 +89,12 @@ func NewUserHandler(us domain.UserService) *UserHandler {
 func ProfileHandler(userService *user.Service) http.HandlerFunc {
     // Получаем пользователя из контекста через сервис
     return func(w http.ResponseWriter, r *http.Request) {
-        //fmt.Println("lol")
         user, err := userService.GetCurrentUser(r.Context())
-        //fmt.Println("lol")
         if err != nil {
             respondWithError(w, http.StatusUnauthorized, "Authentication required")
             return
         }
 
-        // Формируем безопасный ответ (без чувствительных данных)
         safeUser := struct {
             ID       int    `json:"id"`
             Username string `json:"username"`

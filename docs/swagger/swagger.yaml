@@ -1,21 +1,22 @@
 basePath: /
 definitions:
-  golangproject_pkg_reqresp.ErrorResponse:
-    properties:
-      message:
-        example: error message
-        type: string
-    type: object
-  internal_deliveries_http_delivery.AuthRequest:
+  golangproject_pkg_reqresp.AuthRequest:
     properties:
       email:
         type: string
       password:
         type: string
     type: object
-  internal_deliveries_http_delivery.AuthResponse:
+  golangproject_pkg_reqresp.AuthResponse:
     properties:
       token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  golangproject_pkg_reqresp.ErrorResponse:
+    properties:
+      message:
+        example: error message
         type: string
     type: object
 host: localhost:8080
@@ -43,14 +44,14 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/internal_deliveries_http_delivery.AuthRequest'
+          $ref: '#/definitions/golangproject_pkg_reqresp.AuthRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_deliveries_http_delivery.AuthResponse'
+            $ref: '#/definitions/golangproject_pkg_reqresp.AuthResponse'
         "400":
           description: Bad Request
           schema:
