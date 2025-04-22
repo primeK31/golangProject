@@ -30,5 +30,6 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/swaggo/http-swagger v1.3.4
 )

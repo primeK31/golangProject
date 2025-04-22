@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+	"time"
+
 	//"log"
 
 	"github.com/joho/godotenv"
@@ -17,6 +19,7 @@ type Config struct {
 	DB_HOST string
 	DB_PORT string 
 	DB_NAME string
+	SessionDuration time.Duration
 }
 
 func LoadConfig() *Config {
@@ -24,6 +27,10 @@ func LoadConfig() *Config {
 	/*if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}*/
+
+	duration := os.Getenv("SESSION_DURATION")
+    
+    session_duration, _ := time.ParseDuration(duration)
 
 	return &Config{
 		HTTPPort: os.Getenv("HTTPPort"),
@@ -34,5 +41,6 @@ func LoadConfig() *Config {
 		DB_HOST: os.Getenv("DB_HOST"),
 		DB_PORT: os.Getenv("DB_PORT"),
 		DB_NAME: os.Getenv("DB_NAME"),
+		SessionDuration: session_duration,
 	}
 }

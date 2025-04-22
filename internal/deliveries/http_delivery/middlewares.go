@@ -5,10 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"golangproject/internal/app/config"
 	"golangproject/internal/services/auth"
 	"golangproject/internal/services/middleware"
+	"golangproject/internal/services/session.go"
 	"golangproject/internal/services/user"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -27,14 +29,12 @@ func AuthMiddleware(authService *auth.Service, userService *user.Service) func(h
 
             token := strings.TrimPrefix(authHeader, "Bearer ")
 
-            // Validate token and get user ID
             userID, err := ValidateToken(r.Context(), token)
             if err != nil {
                 http.Error(w, "Invalid token", http.StatusUnauthorized)
                 return
             }
 
-            // Fetch the user from the DB
             user, err := userService.GetProfile(r.Context(), userID)
             if err != nil {
                 http.Error(w, "User not found", http.StatusUnauthorized)
@@ -45,6 +45,32 @@ func AuthMiddleware(authService *auth.Service, userService *user.Service) func(h
             ctx := context.WithValue(r.Context(), middleware.CurrentUserKey, user)
 
             // Call the next handler with the updated context
+            next.ServeHTTP(w, r.WithContext(ctx))
+        })
+    }
+}
+
+func SessionMiddleware(sessionService *session.Service) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            cookie, err := r.Cookie("session_id")
+            if err != nil {
+                respondWithError(w, http.StatusUnauthorized, "Session required")
+                return
+            }
+
+            session, err := sessionService.GetSession(r.Context(), cookie.Value)
+            if err != nil {
+                respondWithError(w, http.StatusUnauthorized, "Invalid session")
+                return
+            }
+
+            if time.Now().After(session.ExpiresAt) {
+                respondWithError(w, http.StatusUnauthorized, "Session expired")
+                return
+            }
+
+            ctx := context.WithValue(r.Context(), middleware.CurrentUserKey, session.UserID)
             next.ServeHTTP(w, r.WithContext(ctx))
         })
     }

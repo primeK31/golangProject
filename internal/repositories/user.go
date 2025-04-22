@@ -109,7 +109,7 @@ func isDuplicateError(err error) bool {
 	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
 		return mysqlErr.Number == 1062 // Код ошибки дублирования для MySQL
 	}
-	// Для PostgreSQL используйте проверку на pgErr.Code == "23505"
+	
 	return false
 }
 

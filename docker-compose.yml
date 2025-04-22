@@ -40,6 +40,7 @@ services:
       DB_NAME: mydatabase
       SECRET_KEY: ec362341b75a7b4d65b17b17cf85a8a38ce363032c001802fefcc3a796f58822
       HTTPPort: ":8080"
+      SESSION_DURATION: "30m"
     networks:
       - backend-network
 

@@ -3,11 +3,12 @@ package start
 import (
 	"net/http"
 
+	_ "golangproject/docs/swagger"
 	"golangproject/internal/app/config"
 	"golangproject/internal/deliveries/http_delivery"
 	"golangproject/internal/services/auth"
+	"golangproject/internal/services/session.go"
 	"golangproject/internal/services/user"
-	_ "golangproject/docs/swagger"
 
 	"github.com/gorilla/mux"
 	"github.com/swaggo/http-swagger"
@@ -23,9 +24,10 @@ func (s *Server) Start() error {
     return s.httpServer.ListenAndServe()
 }
 
-func NewServer(authService *auth.Service, userService *user.Service) *Server {
+func NewServer(authService *auth.Service, userService *user.Service,
+     sessionService *session.Service,) *Server {
 	cfg := config.LoadConfig()
-    router := setupRouter(authService, userService)
+    router := setupRouter(authService, userService, sessionService)
     
     return &Server {
         httpServer: &http.Server{
@@ -52,16 +54,19 @@ func NewServer(authService *auth.Service, userService *user.Service) *Server {
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
-func setupRouter(authService *auth.Service, userService *user.Service) *mux.Router {
+func setupRouter(authService *auth.Service, userService *user.Service, 
+    sessionService *session.Service) *mux.Router {
     router := mux.NewRouter()
     
     authMiddleware := http_delivery.AuthMiddleware(authService, userService)
-    loginHandler := http_delivery.LoginHandler(authService, userService)
+    loginHandler := http_delivery.LoginHandler(authService, userService, sessionService)
+    logoutHandler := http_delivery.LogoutHandler(sessionService)
 	registerHandler := http_delivery.RegisterHandler(userService)
 
     // Public routes
 	router.Path("/swagger/{any:.*}").Handler(httpSwagger.WrapHandler)
     router.HandleFunc("/login", loginHandler).Methods("POST")
+    router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.HandleFunc("/register", registerHandler).Methods("POST")  // rest methods
 	router.Handle("/profile", authMiddleware(http_delivery.ProfileHandler(userService))).Methods("GET")
 

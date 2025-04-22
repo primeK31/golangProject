@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	_ "golangproject/docs/swagger"
 	"golangproject/internal/repositories"
 	"golangproject/internal/services/auth"
+	"golangproject/internal/services/session.go"
 	"golangproject/internal/services/user"
 	"golangproject/pkg/domain"
-    "golangproject/pkg/reqresp"
+	"golangproject/pkg/reqresp"
 )
 
 
@@ -51,7 +53,7 @@ func RegisterHandler(userService *user.Service) http.HandlerFunc {
 // @Failure 401 {object} reqresp.ErrorResponse
 // @Failure 500 {object} reqresp.ErrorResponse
 // @Router /login [post]
-func LoginHandler(authService *auth.Service, userService *user.Service) http.HandlerFunc {
+func LoginHandler(authService *auth.Service, userService *user.Service, sessionService *session.Service) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var req reqresp.AuthRequest
         if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -71,7 +73,59 @@ func LoginHandler(authService *auth.Service, userService *user.Service) http.Han
             return
         }
 
+        /* fmt.Println("user_id ")
+        fmt.Println(user.ID) */
+
+        session, err := sessionService.CreateSession(r.Context(), user.ID, r)
+        if err != nil {
+            respondWithError(w, http.StatusInternalServerError, "Failed to create session")
+            return
+        }
+
+        // Set the JWT token in a secure HTTP-only cookie
+        http.SetCookie(w, &http.Cookie{
+            Name:     "auth_token", // JWT stored in "auth_token"
+            Value:    token,         // The generated JWT token
+            Expires:  session.ExpiresAt,
+            HttpOnly: true,          // Ensure the cookie is not accessible via JavaScript
+            Secure:   true,          // Set to true in production with HTTPS
+            SameSite: http.SameSiteStrictMode, // Strict mode for cookie security
+            Path:     "/",           // Cookie is available for the whole site
+        })
+
+        // Respond with the JWT token (optional, as it's already in the cookie)
         respondWithJSON(w, http.StatusOK, reqresp.AuthResponse{Token: token})
+    }
+}
+
+
+func LogoutHandler(sessionService *session.Service) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        cookie, err := r.Cookie("session_id")
+        if err != nil {
+            respondWithError(w, http.StatusBadRequest, "No active session")
+            return
+        }
+
+        if err := sessionService.DeleteSession(r.Context(), cookie.Value); err != nil {
+            respondWithError(w, http.StatusInternalServerError, "Failed to logout")
+            return
+        }
+
+        // Очищаем куки
+        http.SetCookie(w, &http.Cookie{
+            Name:     "session_id",
+            Value:    "",
+            Expires:  time.Unix(0, 0),
+            HttpOnly: true,
+            Secure:   true,
+            SameSite: http.SameSiteStrictMode,
+            Path:     "/",
+        })
+
+        respondWithJSON(w, http.StatusOK, map[string]string{
+            "message": "Successfully logged out",
+        })
     }
 }
 

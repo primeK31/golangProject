@@ -9,6 +9,7 @@ import (
 	"golangproject/internal/app/start"
 	"golangproject/internal/repositories"
 	"golangproject/internal/services/auth"
+	"golangproject/internal/services/session.go"
 	"golangproject/internal/services/user"
 )
 
@@ -32,14 +33,16 @@ func New() *App {
 
 	// repo init
 	userRepo := repositories.NewUserRepository(db)
+	sessionRepo := repositories.NewSessionRepository(db)
 
 	// service init
 	authService := auth.New(cfg.JWTSecret)
 	userService := user.New(userRepo)
+	sessionService := session.New(sessionRepo, cfg.SessionDuration, []byte(cfg.JWTSecret))
     
     return &App{
         Config: cfg,
-        Server: start.NewServer(authService, userService),
+        Server: start.NewServer(authService, userService, sessionService),
     }
 }
 
