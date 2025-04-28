@@ -10,6 +10,7 @@ import (
 	"golangproject/pkg/domain"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -26,26 +27,24 @@ func New(repo repositories.SessionRepository, sessionDuration time.Duration, sec
     }
 }
 
-func (s *Service) CreateSession(ctx context.Context, userID int, r *http.Request) (*domain.Session, error) {
-    token, err := s.generateJWT(userID, r)
+func (s *Service) CreateSession(ctx context.Context, userUUID uuid.UUID, r *http.Request) (*domain.Session, error) {
+    token, err := s.generateJWT(userUUID, r)
     if err != nil {
         return nil, fmt.Errorf("failed to generate JWT: %w", err)
     }
 
     session := &domain.Session{
         Token:     token,
-        UserID:    userID,
+        UserUUID:    userUUID,
         ExpiresAt: time.Now().Add(s.sessionDuration),
         CreatedAt: time.Now(),
         UserAgent: r.UserAgent(),
         IPAddress: getIPAddress(r),
     }
 
-	//fmt.Println(session)
     if err := s.repo.Create(ctx, session); err != nil {
         return nil, fmt.Errorf("failed to save session: %w", err)
     }
-	//fmt.Println(session)
 
     return session, nil
 }
@@ -71,13 +70,14 @@ func (s *Service) DeleteSession(ctx context.Context, tokenStr string) error {
     if err != nil {
         return fmt.Errorf("failed to validate JWT: %w", err)
     }
+    fmt.Println(tokenStr)
 
     return s.repo.Delete(ctx, tokenStr)
 }
 
-func (s *Service) generateJWT(userID int, r *http.Request) (string, error) {
+func (s *Service) generateJWT(userUUID uuid.UUID, r *http.Request) (string, error) {
     claims := jwt.MapClaims{
-        "user_id": userID,
+        "user_uuid": userUUID,
         "exp":     time.Now().Add(s.sessionDuration).Unix(), // Expiry time
         "iat":     time.Now().Unix(), // Issued at time
         "user_agent": r.UserAgent(),
@@ -106,9 +106,9 @@ func (s *Service) parseJWT(tokenStr string) (int, error) {
     }
 
     if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-        userID, ok := claims["user_id"].(float64) // user_id is float64 in JWT claims
+        userID, ok := claims["user_uuid"].(float64) // user_id is float64 in JWT claims
         if !ok {
-            return 0, fmt.Errorf("user_id not found in token")
+            return 0, fmt.Errorf("user_uuid not found in token")
         }
         return int(userID), nil
     }

@@ -13,6 +13,8 @@ import (
 	"golangproject/internal/services/user"
 	"golangproject/pkg/domain"
 	"golangproject/pkg/reqresp"
+
+	"github.com/google/uuid"
 )
 
 
@@ -73,10 +75,7 @@ func LoginHandler(authService *auth.Service, userService *user.Service, sessionS
             return
         }
 
-        /* fmt.Println("user_id ")
-        fmt.Println(user.ID) */
-
-        session, err := sessionService.CreateSession(r.Context(), user.ID, r)
+        session, err := sessionService.CreateSession(r.Context(), user.UUID, r)
         if err != nil {
             respondWithError(w, http.StatusInternalServerError, "Failed to create session")
             return
@@ -84,7 +83,7 @@ func LoginHandler(authService *auth.Service, userService *user.Service, sessionS
 
         // Set the JWT token in a secure HTTP-only cookie
         http.SetCookie(w, &http.Cookie{
-            Name:     "auth_token", // JWT stored in "auth_token"
+            Name:     "session_id",
             Value:    token,         // The generated JWT token
             Expires:  session.ExpiresAt,
             HttpOnly: true,          // Ensure the cookie is not accessible via JavaScript
@@ -107,20 +106,16 @@ func LogoutHandler(sessionService *session.Service) http.HandlerFunc {
             return
         }
 
-        if err := sessionService.DeleteSession(r.Context(), cookie.Value); err != nil {
-            respondWithError(w, http.StatusInternalServerError, "Failed to logout")
-            return
-        }
-
-        // Очищаем куки
         http.SetCookie(w, &http.Cookie{
             Name:     "session_id",
             Value:    "",
-            Expires:  time.Unix(0, 0),
+            Path:     "/",                         // must match the original Path
+            Domain:   cookie.Domain,              // if you set Domain originally
+            Expires:  time.Unix(0, 0),             // in the past
+            MaxAge:   -1,                          // delete immediately
             HttpOnly: true,
-            Secure:   true,
+            Secure:   true,                        // HTTPS only in prod
             SameSite: http.SameSiteStrictMode,
-            Path:     "/",
         })
 
         respondWithJSON(w, http.StatusOK, map[string]string{
@@ -150,11 +145,11 @@ func ProfileHandler(userService *user.Service) http.HandlerFunc {
         }
 
         safeUser := struct {
-            ID       int    `json:"id"`
+            UUID     uuid.UUID    `json:"uuid"`
             Username string `json:"username"`
             Email    string `json:"email"`
         }{
-            ID:       user.ID,
+            UUID:       user.UUID,
             Username: user.Username,
             Email:    user.Email,
         }

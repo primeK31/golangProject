@@ -7,6 +7,7 @@ import (
 	"golangproject/internal/app/config"
 	"golangproject/internal/deliveries/http_delivery"
 	"golangproject/internal/services/auth"
+	"golangproject/internal/services/bet"
 	"golangproject/internal/services/session.go"
 	"golangproject/internal/services/user"
 
@@ -25,9 +26,9 @@ func (s *Server) Start() error {
 }
 
 func NewServer(authService *auth.Service, userService *user.Service,
-     sessionService *session.Service,) *Server {
+     sessionService *session.Service, betService *bet.SecondServiceClient) *Server {
 	cfg := config.LoadConfig()
-    router := setupRouter(authService, userService, sessionService)
+    router := setupRouter(authService, userService, sessionService, betService)
     
     return &Server {
         httpServer: &http.Server{
@@ -55,22 +56,28 @@ func NewServer(authService *auth.Service, userService *user.Service,
 // @in header
 // @name Authorization
 func setupRouter(authService *auth.Service, userService *user.Service, 
-    sessionService *session.Service) *mux.Router {
+    sessionService *session.Service, betService *bet.SecondServiceClient) *mux.Router {
     router := mux.NewRouter()
     
     authMiddleware := http_delivery.AuthMiddleware(authService, userService)
     loginHandler := http_delivery.LoginHandler(authService, userService, sessionService)
     logoutHandler := http_delivery.LogoutHandler(sessionService)
 	registerHandler := http_delivery.RegisterHandler(userService)
+    betHandler := authMiddleware(
+        http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            http_delivery.BetHandler(w, r, betService)
+        }),
+    )
 
-    // Public routes
+    // public routes
 	router.Path("/swagger/{any:.*}").Handler(httpSwagger.WrapHandler)
     router.HandleFunc("/login", loginHandler).Methods("POST")
+    router.Handle("/bet", betHandler).Methods("POST")
     router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.HandleFunc("/register", registerHandler).Methods("POST")  // rest methods
 	router.Handle("/profile", authMiddleware(http_delivery.ProfileHandler(userService))).Methods("GET")
 
-    // Protected routes
+    // protected routes
     protected := router.PathPrefix("/api").Subrouter()
     protected.Use(authMiddleware)
     protected.HandleFunc("/profile", http_delivery.ProfileHandler(userService)).Methods("GET")

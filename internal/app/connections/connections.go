@@ -3,6 +3,8 @@ package connections
 import (
 	// "log"
 	"database/sql"
+	"log"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -12,9 +14,15 @@ var db *sql.DB
 
 
 func ConnectDB(databaseURL string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", databaseURL)
-	if err != nil {
-		return nil, err
+	var db *sql.DB
+	var err error
+	for {
+		db, err = sql.Open("mysql", databaseURL)
+		if err == nil {
+			break
+		}
+		log.Println("Waiting for database...")
+		time.Sleep(2 * time.Second)
 	}
 
 	// Test the connection

@@ -31,5 +31,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/uuid v1.6.0
+	github.com/sony/gobreaker v1.0.0
 	github.com/swaggo/http-swagger v1.3.4
 )

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -14,7 +15,7 @@ type Service struct {
 }
 
 type Claims struct {
-	UserID int `json:"user_id"`
+	UserUUID uuid.UUID `json:"user_uuid"`
 	jwt.RegisteredClaims
 }
 
@@ -24,7 +25,7 @@ func New(jwtSecret string) *Service {
 
 func (s *Service) GenerateToken(user *domain.User) (string, error) {
     claims := jwt.MapClaims{
-        "user_id": user.ID,
+        "user_uuid": user.UUID,
         "exp":     time.Now().Add(time.Hour * 72).Unix(),
     }
     

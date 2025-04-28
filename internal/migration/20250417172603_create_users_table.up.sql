@@ -1,7 +1,21 @@
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE users (
+    uuid BINARY(16) PRIMARY KEY COMMENT 'UUID in binary format',
+    email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    balance INT NOT NULL DEFAULT 0
-);
+    balance INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+DELIMITER //
+CREATE TRIGGER before_users_insert 
+BEFORE INSERT ON users 
+FOR EACH ROW 
+BEGIN
+    IF NEW.uuid IS NULL THEN
+        SET NEW.uuid = UUID_TO_BIN(UUID(), 1);
+    END IF;
+END//
+DELIMITER ;
+
+CREATE INDEX idx_users_email ON users(email);

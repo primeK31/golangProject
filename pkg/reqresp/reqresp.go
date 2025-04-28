@@ -12,6 +12,19 @@ type RegisterRequest struct {
     Password string `json:"password"`
 }
 
+type BetRequest struct {
+    UserID string `json: "userId"`
+    EventID string `json: "eventId"`
+    Amount float32 `json: "amount"`
+    PredictedOutcome string `json: "predictedOutcome"`
+}
+
+type HandlerResponse struct {
+    StatusCode int
+    Headers    map[string]string
+    Body       []byte
+}
+
 type AuthResponse struct {
     Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }

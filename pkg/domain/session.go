@@ -1,10 +1,14 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Session struct {
 	Token 	   string
-    UserID     int
+    UserUUID   uuid.UUID
     ExpiresAt  time.Time
     CreatedAt  time.Time
     UserAgent  string

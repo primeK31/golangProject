@@ -14,6 +14,7 @@ import (
 	"golangproject/internal/services/user"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 
@@ -29,20 +30,20 @@ func AuthMiddleware(authService *auth.Service, userService *user.Service) func(h
 
             token := strings.TrimPrefix(authHeader, "Bearer ")
 
-            userID, err := ValidateToken(r.Context(), token)
+            userUUID, err := ValidateToken(r.Context(), token)
             if err != nil {
                 http.Error(w, "Invalid token", http.StatusUnauthorized)
                 return
             }
 
-            user, err := userService.GetProfile(r.Context(), userID)
-            if err != nil {
+            user, err := userService.GetProfile(r.Context(), userUUID)
+            if user == nil || err != nil {
                 http.Error(w, "User not found", http.StatusUnauthorized)
                 return
             }
 
             // Inject user into context
-            ctx := context.WithValue(r.Context(), middleware.CurrentUserKey, user)
+            ctx := context.WithValue(r.Context(), middleware.CurrentUserKey, userUUID)
 
             // Call the next handler with the updated context
             next.ServeHTTP(w, r.WithContext(ctx))
@@ -70,14 +71,14 @@ func SessionMiddleware(sessionService *session.Service) func(http.Handler) http.
                 return
             }
 
-            ctx := context.WithValue(r.Context(), middleware.CurrentUserKey, session.UserID)
+            ctx := context.WithValue(r.Context(), middleware.CurrentUserKey, session.UserUUID)
             next.ServeHTTP(w, r.WithContext(ctx))
         })
     }
 }
 
 
-func ValidateToken(ctx context.Context, tokenString string) (int, error) {
+func ValidateToken(ctx context.Context, tokenString string) (uuid.UUID, error) {
     token, err := jwt.ParseWithClaims(tokenString, &auth.Claims{}, func(token *jwt.Token) (interface{}, error) {
         // Ensure the signing method is HMAC
         cfg := config.LoadConfig()
@@ -88,13 +89,13 @@ func ValidateToken(ctx context.Context, tokenString string) (int, error) {
     })
 
     if err != nil {
-        return 0, err
+        return uuid.Nil, err
     }
 
     claims, ok := token.Claims.(*auth.Claims)
     if !ok || !token.Valid {
-        return 0, errors.New("invalid token")
+        return uuid.Nil, errors.New("invalid token")
     }
 
-    return claims.UserID, nil
+    return claims.UserUUID, nil
 }

@@ -9,6 +9,7 @@ import (
 	"golangproject/internal/services/middleware"
 	"golangproject/pkg/domain"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,7 +28,6 @@ func New(repo repositories.UserRepository) *Service {
 }
 
 func (s *Service) HashPassword(password string) (string, error) {
-	// Добавляем "пепец" к паролю перед хэшированием
 	hashedPassword, err := bcrypt.GenerateFromPassword(
 		[]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -55,12 +55,10 @@ func (s *Service) Register(ctx context.Context, user domain.User) (*domain.User,
 func (s *Service) Authenticate(ctx context.Context, email, password string) (*domain.User, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		//fmt.Println("not found by email")
 		return nil, ErrUserNotFound
 	}
 
 	if !s.comparePassword(user.Password, password) {
-		//fmt.Println("password")
 		return nil, ErrInvalidPassword
 	}
 
@@ -70,14 +68,12 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*do
 func (s *Service) GetCurrentUser(ctx context.Context) (*domain.User, error) {
     // Получаем пользователя из контекста
     user, ok := ctx.Value(middleware.CurrentUserKey).(*domain.User)
-	//fmt.Println("test")
-	//fmt.Println(user.Username)
     if !ok || user == nil {
         return nil, ErrUnauthorized
     }
     
     // При необходимости обновляем данные из БД
-    freshUser, err := s.repo.GetByID(ctx, user.ID)
+    freshUser, err := s.repo.GetByID(ctx, user.UUID)
     if err != nil {
         return nil, fmt.Errorf("failed to refresh user data: %w", err)
     }
@@ -85,10 +81,8 @@ func (s *Service) GetCurrentUser(ctx context.Context) (*domain.User, error) {
     return freshUser, nil
 }
 
-func (s *Service) GetProfile(ctx context.Context, id int) (*domain.User, error) {
-	userID := id
-	//fmt.Println("PROFILE")
-	//fmt.Println(userID)
+func (s *Service) GetProfile(ctx context.Context, uuid uuid.UUID) (*domain.User, error) {
+	userID := uuid
 	
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {

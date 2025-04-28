@@ -9,6 +9,7 @@ import (
 	"golangproject/internal/app/start"
 	"golangproject/internal/repositories"
 	"golangproject/internal/services/auth"
+	"golangproject/internal/services/bet"
 	"golangproject/internal/services/session.go"
 	"golangproject/internal/services/user"
 )
@@ -31,6 +32,9 @@ func New() *App {
 
 	fmt.Println("Database connected successfully!")
 
+	apiGatewayURL := "https://30kfdcqx-8080.euw.devtunnels.ms"
+	servicePath := "/api/v1/bets"
+
 	// repo init
 	userRepo := repositories.NewUserRepository(db)
 	sessionRepo := repositories.NewSessionRepository(db)
@@ -39,10 +43,11 @@ func New() *App {
 	authService := auth.New(cfg.JWTSecret)
 	userService := user.New(userRepo)
 	sessionService := session.New(sessionRepo, cfg.SessionDuration, []byte(cfg.JWTSecret))
+	betService := bet.NewSecondServiceClient(apiGatewayURL, servicePath)
     
     return &App{
         Config: cfg,
-        Server: start.NewServer(authService, userService, sessionService),
+        Server: start.NewServer(authService, userService, sessionService, betService),
     }
 }
 

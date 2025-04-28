@@ -10,6 +10,7 @@ import (
 	"golangproject/pkg/domain"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 )
 
 type UserRepository interface {
-	GetByID(ctx context.Context, id int) (*domain.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
     AddUser(ctx context.Context, user domain.User) (*domain.User, error)
 }
@@ -31,18 +32,22 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	return &userRepo{db: db}
 }
 
-func (r *userRepo) GetByID(ctx context.Context, id int) (*domain.User, error) {
-    const query = `SELECT id, email, username FROM users WHERE id = ?`
+func (r *userRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+	//fmt.Println(id)
+    const query = `SELECT uuid, email, username FROM users WHERE uuid = UNHEX(REPLACE(?, "-", ""));`
     
     var user domain.User
     err := r.db.QueryRowContext(ctx, query, id).Scan(
-        &user.ID,
+        &user.UUID,
         &user.Email,
         &user.Username,
     )
-    
-    if err != nil {
-        return nil, err
+    //fmt.Println(user.Username)
+	if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, fmt.Errorf("user not found: %w", err)
+        }
+        return nil, fmt.Errorf("failed to query user: %w", err)
     }
     
     return &user, nil
@@ -51,7 +56,7 @@ func (r *userRepo) GetByID(ctx context.Context, id int) (*domain.User, error) {
 func (r *userRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	const query = `
 		SELECT 
-			id, 
+			uuid, 
 			email, 
 			password
 		FROM users 
@@ -60,7 +65,7 @@ func (r *userRepo) GetByEmail(ctx context.Context, email string) (*domain.User, 
 	var user domain.User
 
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
-		&user.ID,
+		&user.UUID,
 		&user.Email,
 		&user.Password,
 	)
@@ -77,16 +82,19 @@ func (r *userRepo) GetByEmail(ctx context.Context, email string) (*domain.User, 
 }
 
 func (r *userRepo) AddUser(ctx context.Context, user domain.User) (*domain.User, error) {
+	// fmt.Println("test")
 	const query = `
         INSERT INTO users (
+			uuid, 
             username, 
             email, 
             password
-        ) VALUES (?, ?, ?)`
+        ) VALUES (UNHEX(REPLACE(?, "-", "")), ?, ?, ?)`
 	// Выполняем запрос с контекстом
 	_, err := r.db.ExecContext(
 		ctx,
 		query,
+		uuid.New().String(),
 		user.Username,
 		user.Email,
 		user.Password,
@@ -116,7 +124,7 @@ func isDuplicateError(err error) bool {
 func (r *userRepo) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
     const query = `
         SELECT 
-            id, 
+            uuid, 
             email, 
             password
         FROM users 
@@ -125,7 +133,7 @@ func (r *userRepo) GetByUsername(ctx context.Context, username string) (*domain.
     var user domain.User
 
     err := r.db.QueryRowContext(ctx, query, username).Scan(
-        &user.ID,
+        &user.UUID,
         &user.Email,
         &user.Password,
     )
