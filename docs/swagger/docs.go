@@ -297,18 +297,18 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "amount",
-                "event_id",
-                "odds"
+                "eventId",
+                "predictedOutcome"
             ],
             "properties": {
                 "amount": {
                     "type": "number"
                 },
-                "event_id": {
+                "eventId": {
                     "type": "string"
                 },
-                "odds": {
-                    "type": "number"
+                "predictedOutcome": {
+                    "type": "string"
                 }
             }
         },

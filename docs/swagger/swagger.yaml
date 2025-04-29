@@ -17,14 +17,14 @@ definitions:
     properties:
       amount:
         type: number
-      event_id:
+      eventId:
         type: string
-      odds:
-        type: number
+      predictedOutcome:
+        type: string
     required:
     - amount
-    - event_id
-    - odds
+    - eventId
+    - predictedOutcome
     type: object
   golangproject_pkg_reqresp.BetResponse:
     properties:

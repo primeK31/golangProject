@@ -11,12 +11,12 @@ var (
 
 type ContextKey string
 
-const UserIDKey ContextKey = "user_id"
+//const UserIDKey ContextKey = "user_id"
 const CurrentUserKey ContextKey = "current_user"
 
 func Auth(next func(context.Context) (interface{}, error)) func(context.Context) (interface{}, error) {
     return func(ctx context.Context) (interface{}, error) {
-        userID := ctx.Value(ContextKey("user_id"))
+        userID := ctx.Value(ContextKey("current_user"))
         if userID == nil {
             return nil, ErrUnauthorized
         }

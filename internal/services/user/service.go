@@ -67,13 +67,13 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*do
 
 func (s *Service) GetCurrentUser(ctx context.Context) (*domain.User, error) {
     // Получаем пользователя из контекста
-    user, ok := ctx.Value(middleware.CurrentUserKey).(*domain.User)
-    if !ok || user == nil {
+    user_uuid, ok := ctx.Value(middleware.CurrentUserKey).(uuid.UUID)
+    if !ok || user_uuid == uuid.Nil {
         return nil, ErrUnauthorized
     }
     
     // При необходимости обновляем данные из БД
-    freshUser, err := s.repo.GetByID(ctx, user.UUID)
+    freshUser, err := s.repo.GetByID(ctx, user_uuid)
     if err != nil {
         return nil, fmt.Errorf("failed to refresh user data: %w", err)
     }
