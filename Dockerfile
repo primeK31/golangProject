@@ -23,7 +23,7 @@ RUN swag init \
     --parseInternal \
     --parseDepth 5 \
     -g internal/app/start/start.go \
-    --output internal/app/swagger
+    --output docs/swagger
 
 WORKDIR /golangProject/cmd/app
 

@@ -33,6 +33,8 @@ services:
       SECRET_KEY: ec362341b75a7b4d65b17b17cf85a8a38ce363032c001802fefcc3a796f58822
       HTTPPort: :8080
       SESSION_DURATION: 30m
+      API_GATEWAY_URL: https://30kfdcqx-8080.euw.devtunnels.ms
+      SERVICE_PATH: /api/v1/bets
     networks:
       - backend-network
 

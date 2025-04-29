@@ -5,12 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
+	//"time"
 
 	"golangproject/internal/app/config"
 	"golangproject/internal/services/auth"
 	"golangproject/internal/services/middleware"
-	"golangproject/internal/services/session.go"
+	//"golangproject/internal/services/session.go"
 	"golangproject/internal/services/user"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -51,7 +51,7 @@ func AuthMiddleware(authService *auth.Service, userService *user.Service) func(h
     }
 }
 
-func SessionMiddleware(sessionService *session.Service) func(http.Handler) http.Handler {
+/* func SessionMiddleware(sessionService *session.Service) func(http.Handler) http.Handler {
     return func(next http.Handler) http.Handler {
         return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
             cookie, err := r.Cookie("session_id")
@@ -75,7 +75,7 @@ func SessionMiddleware(sessionService *session.Service) func(http.Handler) http.
             next.ServeHTTP(w, r.WithContext(ctx))
         })
     }
-}
+} */
 
 
 func ValidateToken(ctx context.Context, tokenString string) (uuid.UUID, error) {

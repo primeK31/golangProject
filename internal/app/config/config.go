@@ -14,6 +14,8 @@ type Config struct {
 	HTTPPort string
 	//SQL_DATABASE_URL string
 	JWTSecret string
+	API_GATEWAY_URL string
+	SERVICE_PATH string
 	DB_USER string 
 	DB_PASS string
 	DB_HOST string
@@ -36,6 +38,8 @@ func LoadConfig() *Config {
 		HTTPPort: os.Getenv("HTTPPort"),
 		// SQL_DATABASE_URL: os.Getenv("SQL_DATABASE_URL"),
 		JWTSecret:  os.Getenv("SECRET_KEY"),
+		API_GATEWAY_URL: os.Getenv("API_GATEWAY_URL"),
+		SERVICE_PATH: os.Getenv("SERVICE_PATH"),
 		DB_USER: os.Getenv("DB_USER"),
 		DB_PASS: os.Getenv("DB_PASS"),
 		DB_HOST: os.Getenv("DB_HOST"),

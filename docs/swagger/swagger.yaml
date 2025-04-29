@@ -13,10 +13,55 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
+  golangproject_pkg_reqresp.BetRequest:
+    properties:
+      amount:
+        type: number
+      event_id:
+        type: string
+      odds:
+        type: number
+    required:
+    - amount
+    - event_id
+    - odds
+    type: object
+  golangproject_pkg_reqresp.BetResponse:
+    properties:
+      bet_id:
+        type: string
+      message:
+        type: string
+      status:
+        type: string
+    type: object
   golangproject_pkg_reqresp.ErrorResponse:
     properties:
       message:
         example: error message
+        type: string
+    type: object
+  golangproject_pkg_reqresp.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  golangproject_pkg_reqresp.RegisterResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  golangproject_pkg_reqresp.ServiceUnavailableResponse:
+    properties:
+      message:
+        type: string
+      retry_after:
+        type: integer
+      status:
         type: string
     type: object
 host: localhost:8080
@@ -30,9 +75,49 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Clean Architecture API
+  title: Bet Authorization API
   version: "1.0"
 paths:
+  /bets:
+    post:
+      consumes:
+      - application/json
+      description: Create a new bet with user authentication
+      parameters:
+      - description: Bet creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/golangproject_pkg_reqresp.BetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.BetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ServiceUnavailableResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new bet
+      tags:
+      - bet
   /login:
     post:
       consumes:
@@ -41,7 +126,7 @@ paths:
       parameters:
       - description: Login credentials
         in: body
-        name: credentials
+        name: request
         required: true
         schema:
           $ref: '#/definitions/golangproject_pkg_reqresp.AuthRequest'
@@ -65,6 +150,90 @@ paths:
           schema:
             $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
       summary: User login
+      tags:
+      - auth
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user and clear session cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: User logout
+      tags:
+      - auth
+  /profile:
+    get:
+      consumes:
+      - application/json
+      description: Get user details from JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.RegisterResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register new user
+      parameters:
+      - description: Registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/golangproject_pkg_reqresp.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/golangproject_pkg_reqresp.ErrorResponse'
+      summary: User registration
       tags:
       - auth
 securityDefinitions:

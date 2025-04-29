@@ -18,6 +18,23 @@ import (
 )
 
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token
+
+// RegisterHandler godoc
+// @Summary User registration
+// @Description Register new user
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param request body reqresp.RegisterRequest true "Registration data"
+// @Success 201 {object} reqresp.RegisterResponse
+// @Failure 400 {object} reqresp.ErrorResponse
+// @Failure 409 {object} reqresp.ErrorResponse
+// @Failure 500 {object} reqresp.ErrorResponse
+// @Router /register [post]
 func RegisterHandler(userService *user.Service) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var req reqresp.RegisterRequest
@@ -44,12 +61,13 @@ func RegisterHandler(userService *user.Service) http.HandlerFunc {
 }
 
 
+// LoginHandler godoc
 // @Summary User login
 // @Description Authenticate user and get JWT token
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Param credentials body reqresp.AuthRequest true "Login credentials"
+// @Param request body reqresp.AuthRequest true "Login credentials"
 // @Success 200 {object} reqresp.AuthResponse
 // @Failure 400 {object} reqresp.ErrorResponse
 // @Failure 401 {object} reqresp.ErrorResponse
@@ -98,6 +116,17 @@ func LoginHandler(authService *auth.Service, userService *user.Service, sessionS
 }
 
 
+// LogoutHandler godoc
+// @Summary User logout
+// @Description Logout user and clear session cookie
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Success 200 {object} reqresp.RegisterResponse
+// @Failure 400 {object} reqresp.ErrorResponse
+// @Failure 500 {object} reqresp.ErrorResponse
+// @Router /logout [post]
 func LogoutHandler(sessionService *session.Service) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         cookie, err := r.Cookie("session_id")
@@ -135,6 +164,18 @@ func NewUserHandler(us domain.UserService) *UserHandler {
     }
 }
 
+
+// ProfileHandler godoc
+// @Summary Get user profile
+// @Description Get user details from JWT token
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Success 200 {object} reqresp.RegisterResponse
+// @Failure 401 {object} reqresp.ErrorResponse
+// @Failure 500 {object} reqresp.ErrorResponse
+// @Router /profile [get] // Fixed from [post] to [get]
 func ProfileHandler(userService *user.Service) http.HandlerFunc {
     // Получаем пользователя из контекста через сервис
     return func(w http.ResponseWriter, r *http.Request) {

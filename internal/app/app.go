@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
+	//"os"
 
 	"golangproject/internal/app/config"
 	"golangproject/internal/app/connections"
@@ -32,8 +33,8 @@ func New() *App {
 
 	fmt.Println("Database connected successfully!")
 
-	apiGatewayURL := "https://30kfdcqx-8080.euw.devtunnels.ms"
-	servicePath := "/api/v1/bets"
+	apiGatewayURL := cfg.API_GATEWAY_URL
+	servicePath := cfg.SERVICE_PATH
 
 	// repo init
 	userRepo := repositories.NewUserRepository(db)

@@ -38,7 +38,7 @@ func NewServer(authService *auth.Service, userService *user.Service,
 	}
 }
 
-// @title Clean Architecture API
+// @title Bet Authorization API 
 // @version 1.0
 // @description This is a sample server for Clean Architecture.
 // @termsOfService http://swagger.io/terms/

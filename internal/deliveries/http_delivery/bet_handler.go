@@ -7,6 +7,7 @@ import (
 	"golangproject/internal/services/bet"
 	"golangproject/internal/services/middleware"
 	"golangproject/pkg/reqresp"
+	_ "golangproject/docs/swagger"
 	"log"
 	"net/http"
 	"time"
@@ -15,6 +16,20 @@ import (
 	"github.com/sony/gobreaker"
 )
 
+
+// @Summary Create a new bet
+// @Description Create a new bet with user authentication
+// @Tags bet
+// @Accept  json
+// @Produce  json
+// @Security BearerAuth
+// @Param   request body reqresp.BetRequest true "Bet creation data"
+// @Success 200 {object} reqresp.BetResponse
+// @Failure 400 {object} reqresp.ErrorResponse
+// @Failure 401 {object} reqresp.ErrorResponse
+// @Failure 503 {object} reqresp.ServiceUnavailableResponse
+// @Failure 500 {object} reqresp.ErrorResponse
+// @Router /bets [post]
 func BetHandler(w http.ResponseWriter, r *http.Request, s *bet.SecondServiceClient) {
 	var clientData map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&clientData); err != nil {

@@ -190,6 +190,12 @@ Also have a look at the [FAQ](FAQ.md).
 Looking for alternatives? [https://awesome-go.com/#database](https://awesome-go.com/#database).
 
 ```
+docker compose build --no-cache
+docker compose up -d
+docker compose up
+``` 
+
+```
 docker run --rm  
  --network=golangproject_backend-network   -v $(pwd)/internal/migration:/migrations   migrate/migrate   -path=/migrations   -database "mysql://myuser:mypassword@tcp(mysql:3306)/mydatabase"   up
 ``` 
