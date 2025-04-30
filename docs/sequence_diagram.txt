@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant User
+    participant Auth
+    participant Betting
+    participant Payment
+    participant EventsAPI
+
+    User->>Auth: 1. Register/Login and Authenticate User
+    Auth-->>User: 2. Return JWT Token
+
+    User-->>Betting: 3. Create Bet Request (JWT, bet details)
+    
+    Betting->>Auth: 4. Validate JWT Token
+    Auth-->>Betting: 5. Token Validation Result
+    
+    Betting->>EventsAPI: 6. Check Event Availability
+    EventsAPI-->>Betting: 7. Event Status
+    
+    Betting->>Payment: 8. Process Payment (user ID, amount)
+    Payment-->>User: 9. Payment
+    
+    Betting-->>User: 10. Bet Creation Result
